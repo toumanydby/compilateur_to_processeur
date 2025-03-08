@@ -1,50 +1,46 @@
 %{
 #include <stdlib.h>
 #include <stdio.h>
-#include "y.tab.h"
+#include "compilo.tab.h"
 %}
 
 %option noyywrap
 %option noinput
 %option nounput
-
-D   [0-9]
-%%
-
-	// main			  printf(" tMAIN");
-	// RETURN 			  printf(" tRETURN");
-	// else			  printf(" tELSE");
-	// while             printf(" tWHILE");
-	// void              printf(" tVOID");
-	// double			  printf(" tDOUBLE");
-	// "["				  printf(" tOC");
-	// "]"			      printf(" tCC");
-	// [a-z]+            printf(" tID[%s]", yytext);
-
-" "			{ }
-[ \t]+		{ }
-[ \n]+		{ }
-.			{ return tERROR; }
-{D}+		{yyval.number = atoi(yytext); return tNB;}
-int			{ return tINT; }
-if			{ return tIF; }
-","         { return tCOM; }  
-";"         { return tSEM; } 
-"("         { return tOP; } 
-")"         { return tCP; } 
-"{"         { return tOB; } 
-"}"         { return tCB; } 
-"="         { return tAF; } // affectation 
-"-"			{ return tSOU; }
-"+"		    { return tADD; }
-"*"			{ return tMUL; } 
-"/"			{ return tDIV; } 
-"<"			{ return tIT; } // inferior to 
-">"			{ return tST; } // superior to	
-[a-z]+		{ yylval.name = yytext; return tID; }
+%option yylineno
 
 %%
+"main"          { return tMAIN; }
+"const"         { return tCONST; }
+"int"           { return tINT; }
+"void"          { return tVOID; }
+"printf"        { strcpy(yylval.valuePrintf, yytext); return tPRINTF; }
+"return"        { return tRETURN; }
+"if"            { return tIF; }
+"else"          { return tELSE; }
+"while"         { return tWHILE; }
 
-int main(void) {
-	yylex();
-}
+"+"             { return tADD; }
+"-"             { return tSOU; }
+"*"             { return tMUL; }
+"/"             { return tDIV; }
+"="             { return tAF; }
+"=="            { return tEG; }
+"!="            { return tNE; }
+"<"             { return tINF; }
+">"             { return tSUP; }
+
+"("             { return tOP; }
+")"             { return tCP; }
+"{"             { return tOB; }
+"}"             { return tCB; }
+";"             { return tSEM; }
+","             { return tCOM; }
+
+[0-9]+          { yylval.number = atoi(yytext); return tNB; }
+[a-zA-Z][a-zA-Z0-9_]*  { strcpy(yylval.name, yytext); return tID; }
+
+[ \t\n]+        ; /* Ignore les espaces, tabulations et retours à la ligne */
+.               { printf("Caractère non reconnu: '%s'\n", yytext); return tERROR; }
+
+%%

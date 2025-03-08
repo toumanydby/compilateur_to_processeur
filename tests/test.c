@@ -1,22 +1,18 @@
-int f(int a, int b){
-    if (a)
-    {
-    }
-
-    a = a*b-a +4;
-    return a;
+int main() {
+    int x = 42;
+    int y = 10;
+    int z = x + y;
+    printf(z);
+    return 0;
 }
 
-int main()
-{
-    int a = 5;
-    int b = 10;
-
-    if(a < f(a,b)){
-        b = f(a,b); 
-        if( b < a ){
-            a = b;
-        }
+void test() {
+    int a = 10;
+    int b = 20;
+    int c = a + b;
+    if (c > 0) {
+        printf(c);
+    } else {
+        printf(0);
     }
-    return 0;
 }

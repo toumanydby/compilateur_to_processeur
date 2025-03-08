@@ -1,96 +1,81 @@
-# all:compilo
-
-# compilo: lex.yy.c
-# 	gcc -o compilo 
-
-# lex.yy.c: compilo.l
-# 	lex compilo.l
-
-# test: compilo
-# 	./compilo < test.c
-
-# GRM=calc.y
-# LEX=compilo.l
-# BIN=compilo
-# TEST_FILE=test.c
-
-# CC=gcc
-# CFLAGS=-Wall -g
-
-# OBJ= lex.yy.o
-# all: $(BIN)
-
-# %.o: %.c
-# 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
-
-# lex.yy.c: $(LEX)
-# 	flex $<
-
-# $(BIN): $(OBJ)
-# 	$(CC) $(CFLAGS) $(CPPFLAGS) $^ -o $@
-
-# test: $(BIN)
-# 	./$(BIN) < $(TEST_FILE)
-
-# clean:
-# 	rm $(OBJ) lex.yy.c
-
-
-# Compiler and flags
+# Compilateur et options
 CC = gcc
-CFLAGS = -Wall -g
+CFLAGS = -Wall
+DEBUG_CFLAGS = -Wall -g
 
-# Directories
-SRC_DIR = src
-TEST_DIR = tests
+# Répertoires
 BIN_DIR = bin
 OBJ_DIR = obj
+SRC_DIR = src
 
-# Files
+# Fichiers source
 LEX_FILE = $(SRC_DIR)/compilo.l
 YACC_FILE = $(SRC_DIR)/compilo.y
-TEST_FILE = $(TEST_DIR)/test.c
 
-# Binaries
-COMPILO_BIN = $(BIN_DIR)/compilator
-PROCESSOR_BIN = $(BIN_DIR)/processor
+# Cible par défaut
+all: $(BIN_DIR)/compilateur
 
-# Objects
-COMPILO_OBJ = $(OBJ_DIR)/lex.yy.o 
-# $(OBJ_DIR)/calc.tab.o
-PROCESSOR_OBJ = $(OBJ_DIR)/processor.o
+# Cible de débogage
+debug: $(BIN_DIR)/compilateur_debug
 
-# Targets
-all: compilo processor
-
-compilo: $(COMPILO_BIN)
-
-processor: $(PROCESSOR_BIN)
-
-test: $(COMPILO_BIN)
-	./$(COMPILO_BIN) < $(TEST_FILE)
-
-# Rules for compilo
-$(OBJ_DIR)/lex.yy.c: $(LEX_FILE)
-	flex -o $@ $<
-
-# $(OBJ_DIR)/calc.tab.c: $(YACC_FILE)
-# 	bison -d -o $@ $<
-
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) -c $(CFLAGS) $< -o $@
-
-$(COMPILO_BIN): $(COMPILO_OBJ)
-	$(CC) $(CFLAGS) $^ -o $@
-
-# Rules for processor
-$(PROCESSOR_BIN): $(PROCESSOR_OBJ)
-	$(CC) $(CFLAGS) $^ -o $@
-
-# Create directories if they don't exist
-$(OBJ_DIR) $(BIN_DIR):
+# Création des répertoires si nécessaire
+$(BIN_DIR) $(OBJ_DIR):
 	mkdir -p $@
-# Clean
-clean:
-	rm -rf $(OBJ_DIR)/* $(BIN_DIR)/*
 
+# Génération du parseur avec Bison (sans débogage)
+$(OBJ_DIR)/compilo.tab.c $(OBJ_DIR)/compilo.tab.h: $(YACC_FILE) | $(OBJ_DIR)
+	bison -d $(YACC_FILE) -o $(OBJ_DIR)/compilo.tab.c
+
+# Génération du parseur avec Bison (avec débogage)
+$(OBJ_DIR)/compilo_debug.tab.c $(OBJ_DIR)/compilo_debug.tab.h: $(YACC_FILE) | $(OBJ_DIR)
+	bison -v -d $(YACC_FILE) -o $(OBJ_DIR)/compilo_debug.tab.c
+
+# Génération de l'analyseur lexical avec Flex (sans débogage)
+$(OBJ_DIR)/lex.yy.c: $(LEX_FILE) $(OBJ_DIR)/compilo.tab.h | $(OBJ_DIR)
+	flex -o $(OBJ_DIR)/lex.yy.c $(LEX_FILE)
+
+# Génération de l'analyseur lexical avec Flex (avec débogage)
+$(OBJ_DIR)/lex_debug.yy.c: $(LEX_FILE) $(OBJ_DIR)/compilo_debug.tab.h | $(OBJ_DIR)
+	flex -d -o $(OBJ_DIR)/lex_debug.yy.c $(LEX_FILE)
+
+# Compilation des objets (version standard)
+$(OBJ_DIR)/lex.yy.o: $(OBJ_DIR)/lex.yy.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/compilo.tab.o: $(OBJ_DIR)/compilo.tab.c | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compilation des objets (version débogage)
+$(OBJ_DIR)/lex_debug.yy.o: $(OBJ_DIR)/lex_debug.yy.c | $(OBJ_DIR)
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
+
+$(OBJ_DIR)/compilo_debug.tab.o: $(OBJ_DIR)/compilo_debug.tab.c | $(OBJ_DIR)
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
+
+# Compilation de l'exécutable standard
+$(BIN_DIR)/compilateur: $(OBJ_DIR)/lex.yy.o $(OBJ_DIR)/compilo.tab.o | $(BIN_DIR)
+	$(CC) $(CFLAGS) -o $@ $^
+
+# Compilation de l'exécutable avec débogage
+$(BIN_DIR)/compilateur_debug: $(OBJ_DIR)/lex_debug.yy.o $(OBJ_DIR)/compilo_debug.tab.o | $(BIN_DIR)
+	$(CC) $(DEBUG_CFLAGS) -o $@ $^
+
+# Exécution avec un fichier de test (version standard)
+test: $(BIN_DIR)/compilateur
+	$(BIN_DIR)/compilateur < tests/test.c
+
+# Exécution avec un fichier de test (version débogage)
+test_debug: $(BIN_DIR)/compilateur_debug
+	$(BIN_DIR)/compilateur_debug < tests/test.c 2>&1 | tee debug.log
+
+# Nettoyage des fichiers générés
+clean:
+	rm -f $(BIN_DIR)/compilateur $(BIN_DIR)/compilateur_debug
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/*.c $(OBJ_DIR)/*.h
+	rm -f compilo.output
+
+# Nettoyage complet
+mrproper: clean
+	rm -f *~ *.log
+
+.PHONY: all debug test test_debug clean mrproper
