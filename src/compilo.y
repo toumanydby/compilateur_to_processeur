@@ -6,7 +6,8 @@
 void yyerror(char *s);
 extern int yylex();
 
-#define MAX_SYMBOLES 100
+
+#define MAX_SYMBOLES 1000
 struct {
     char name[256];
     int value;
@@ -25,14 +26,24 @@ void add_symbol(char *name, int value) {
     }
 }
 
-int get_symbol_value(char *name) {
+int get_symbol_adresse(char *name) {
     for (int i = 0; i < nb_symboles; i++) {
+        if (strcmp(symbol_tables[i].name, name) == 0) {
+            return i;
+        }
+    }
+    printf("Erreur: Variable %s non trouvée\n", name);
+    return -1;
+}
+
+int get_symbol_value(char *name) {
+    for (int i = nb_symboles; i >= 0; i--) {
         if (strcmp(symbol_tables[i].name, name) == 0) {
             return symbol_tables[i].value;
         }
     }
     printf("Erreur: Variable %s non trouvée\n", name);
-    return 0;
+    return -1;
 }
 
 void set_symbol_value(char *name, int value) {
@@ -87,8 +98,7 @@ Program :    Functions ;
 Functions:  Func Functions 
           | Func;
 
-Func:   tINT tMAIN tOP tCP                  {printf("int main() ");} Body
-        | tINT tMAIN tOP Params tCP         {printf("int main(%s) ", $4);} Body
+Func:    tINT tMAIN tOP Params tCP         {printf("int main(%s) ", $4);} Body
         | tINT tID tOP Params tCP           {printf("int %s(%s) ", $2, $4);} Body
         | tVOID tID tOP Params tCP          {printf("void %s(%s) ", $2, $4);} Body
         ;
@@ -101,10 +111,10 @@ Body:   tOB             {printf("{\n");}
 Params: Param                   { strcpy($$, $1); }
         | Param tCOM Params     { sprintf($$, "%s, %s", $1, $3); }
         | tVOID                 { strcpy($$, "void"); }
-        | /* vide */            { strcpy($$, ""); }
+        |                       { strcpy($$, ""); }
         ;
 
-Param: tINT tID                 { sprintf($$, "int %s", $2); }
+Param: tINT tID                 { sprintf($$, "int %s", $2); add_symbol($2, 0);}
      ;
 
 Instructions: Instruction Instructions
@@ -146,27 +156,26 @@ Return: tRETURN EXPRESSION tSEM    { printf("return %d;\n", $2); }
       | tRETURN tSEM              { printf("return;\n"); }
       ;
 
-EXPRESSION: EXPRESSION tADD EXPRESSION    { $$ = $1 + $3; printf("ADD %d %d = %d\n", $1, $3, $$); }
-          | EXPRESSION tSOU EXPRESSION    { $$ = $1 - $3; printf("SUB %d %d = %d\n", $1, $3, $$); }
-          | EXPRESSION tMUL EXPRESSION    { $$ = $1 * $3; printf("MUL %d %d = %d\n", $1, $3, $$); }
+EXPRESSION: EXPRESSION tADD EXPRESSION    { $$ = $1 + $3; printf("ADD %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tSOU EXPRESSION    { $$ = $1 - $3; printf("SUB %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tMUL EXPRESSION    { $$ = $1 * $3; printf("MUL %d %d %d \n", $$, $1, $3); }
           | EXPRESSION tDIV EXPRESSION    { 
                 if ($3 != 0) {
                     $$ = $1 / $3; 
-                    printf("DIV %d %d = %d\n", $1, $3, $$);
+                    printf("DIV %d %d %d \n", $$, $1, $3);
                 } else {
                     yyerror("Division by zero");
                     $$ = 0;
                 }
             }
-          | EXPRESSION tEG EXPRESSION    { $$ = $1 == $3; printf("EG %d %d = %d\n", $1, $3, $$); }
-          | EXPRESSION tNE EXPRESSION    { $$ = $1 != $3; printf("NE %d %d = %d\n", $1, $3, $$); }
-          | EXPRESSION tINF EXPRESSION    { $$ = $1 < $3; printf("INF %d %d = %d\n", $1, $3, $$); }
-          | EXPRESSION tSUP EXPRESSION    { $$ = $1 > $3; printf("SUP %d %d = %d\n", $1, $3, $$); }
+          /* | EXPRESSION tEG EXPRESSION    { $$ = $1 == $3; printf("EG %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tNE EXPRESSION    { $$ = $1 != $3; printf("NE %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tINF EXPRESSION    { $$ = $1 < $3; printf("INF %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tSUP EXPRESSION    { $$ = $1 > $3; printf("SUP %d %d %d \n", $$, $1, $3); } */
           | tOP EXPRESSION tCP           { $$ = $2; }
           | tNB                          { $$ = $1; }
           | tID                          { $$ = get_symbol_value($1); }
           ;
-
 %%
 
 void yyerror(char *s) {

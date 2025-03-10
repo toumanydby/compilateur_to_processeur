@@ -41,6 +41,6 @@
 [a-zA-Z][a-zA-Z0-9_]*  { strcpy(yylval.name, yytext); return tID; }
 
 [ \t\n]+        ; /* Ignore les espaces, tabulations et retours à la ligne */
-.               { printf("Caractère non reconnu: '%s'\n", yytext); return tERROR; }
+.               { return tERROR; }
 
 %%
