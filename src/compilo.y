@@ -2,68 +2,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "symboles_table.h"
 
 void yyerror(char *s);
 extern int yylex();
-
-
-#define MAX_SYMBOLES 1000
-struct {
-    char name[256];
-    int value;
-} symbol_tables[MAX_SYMBOLES];
-
-int nb_symboles = 0;
-
-/* Fonctions pour la table des symboles */
-void add_symbol(char *name, int value) {
-    if (nb_symboles < MAX_SYMBOLES) {
-        strcpy(symbol_tables[nb_symboles].name, name);
-        symbol_tables[nb_symboles].value = value;
-        nb_symboles++;
-    } else {
-        printf("Erreur: Table des symboles pleine\n");
-    }
-}
-
-int get_symbol_adresse(char *name) {
-    for (int i = 0; i < nb_symboles; i++) {
-        if (strcmp(symbol_tables[i].name, name) == 0) {
-            return i;
-        }
-    }
-    printf("Erreur: Variable %s non trouvée\n", name);
-    return -1;
-}
-
-int get_symbol_value(char *name) {
-    for (int i = nb_symboles; i >= 0; i--) {
-        if (strcmp(symbol_tables[i].name, name) == 0) {
-            return symbol_tables[i].value;
-        }
-    }
-    printf("Erreur: Variable %s non trouvée\n", name);
-    return -1;
-}
-
-void set_symbol_value(char *name, int value) {
-    for (int i = 0; i < nb_symboles; i++) {
-        if (strcmp(symbol_tables[i].name, name) == 0) {
-            symbol_tables[i].value = value;
-            return;
-        }
-    }
-    printf("Erreur: Variable %s non trouvée\n", name);
-}
-
-void print_symboles_table(void) {
-    printf("Nombre de symboles: %d\n", nb_symboles);
-    for(int i = 0; i < nb_symboles; i++) {
-        printf("%s = %d\n", symbol_tables[i].name, symbol_tables[i].value);
-    }
-}
+SymbolTable sym_tab;
+int current_depth = 0; // pour suivre la profondeur des variables et blocs
 %}
-
 
 %union {
   int number;
@@ -86,14 +31,14 @@ void print_symboles_table(void) {
 %type <name> Param Params
 
 /* Def des priorités et associativités */
-%left tADD tSOU
+%left tADD tSOU tEG tNE tINF tSUP
 %left tMUL tDIV
-%right tAF
+%left tAF
 
 %start Program
 
 %%
-Program :    Functions ;
+Program :{ init_symbol_table(&sym_tab); }   Functions ;
 
 Functions:  Func Functions 
           | Func;
@@ -103,9 +48,14 @@ Func:    tINT tMAIN tOP Params tCP         {printf("int main(%s) ", $4);} Body
         | tVOID tID tOP Params tCP          {printf("void %s(%s) ", $2, $4);} Body
         ;
 
-Body:   tOB             {printf("{\n");} 
+Body:   tOB             {   printf("{\n");
+                            current_depth++;
+                        } 
         Declarations Instructions 
-        tCB             {printf("}\n");}
+        tCB             {   printf("}\n"); 
+                            remove_symbol_at_depth(&sym_tab,current_depth);
+                            current_depth--;
+                        }
         ;
 
 Params: Param                   { strcpy($$, $1); }
@@ -114,7 +64,7 @@ Params: Param                   { strcpy($$, $1); }
         |                       { strcpy($$, ""); }
         ;
 
-Param: tINT tID                 { sprintf($$, "int %s", $2); add_symbol($2, 0);}
+Param: tINT tID                 { sprintf($$, "int %s", $2); add_symbol(&sym_tab,$2, 0, current_depth);}
      ;
 
 Instructions: Instruction Instructions
@@ -133,13 +83,13 @@ Declarations: Declaration Declarations
            | /* vide */
            ;
 
-Declaration: tINT tID tSEM                      {add_symbol($2, 0); printf("int %s;\n", $2); }
-          | tINT tID tAF EXPRESSION tSEM        {add_symbol($2, $4); printf("int %s = %d;\n", $2, $4); }
-          | tCONST tINT tID tAF EXPRESSION tSEM {add_symbol($3, $5); printf("const int %s = %d;\n", $3, $5); }
+Declaration: tINT tID tSEM                      {add_symbol(&sym_tab, $2, 0, current_depth); printf("int %s;\n", $2); }
+          | tINT tID tAF EXPRESSION tSEM        {add_symbol(&sym_tab, $2, $4, current_depth); printf("int %s = %d;\n", $2, $4); }
+          | tCONST tINT tID tAF EXPRESSION tSEM {add_symbol(&sym_tab, $3, $5, current_depth); printf("const int %s = %d;\n", $3, $5); }
           ;
 
 
-Affectation: tID tAF EXPRESSION                 {set_symbol_value($1, $3); printf("%s = %d;\n", $1, $3); }
+Affectation: tID tAF EXPRESSION                 {set_symbol_value(&sym_tab,$1, $3); printf("%s = %d;\n", $1, $3); }
            ;
 
 Printf: tPRINTF tOP EXPRESSION tCP tSEM         { printf("printf(\"%d\");\n", $3); }
@@ -168,13 +118,13 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    { $$ = $1 + $3; printf("ADD %d %d %d \
                     $$ = 0;
                 }
             }
-          /* | EXPRESSION tEG EXPRESSION    { $$ = $1 == $3; printf("EG %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tEG EXPRESSION    { $$ = $1 == $3; printf("EG %d %d %d \n", $$, $1, $3); }
           | EXPRESSION tNE EXPRESSION    { $$ = $1 != $3; printf("NE %d %d %d \n", $$, $1, $3); }
-          | EXPRESSION tINF EXPRESSION    { $$ = $1 < $3; printf("INF %d %d %d \n", $$, $1, $3); }
-          | EXPRESSION tSUP EXPRESSION    { $$ = $1 > $3; printf("SUP %d %d %d \n", $$, $1, $3); } */
+          | EXPRESSION tINF EXPRESSION   { $$ = $1 < $3; printf("INF %d %d %d \n", $$, $1, $3); }
+          | EXPRESSION tSUP EXPRESSION   { $$ = $1 > $3; printf("SUP %d %d %d \n", $$, $1, $3); }
           | tOP EXPRESSION tCP           { $$ = $2; }
           | tNB                          { $$ = $1; }
-          | tID                          { $$ = get_symbol_value($1); }
+          | tID                          { $$ = get_symbol_value(&sym_tab,$1); }
           ;
 %%
 
@@ -189,6 +139,7 @@ int main(void) {
     yyparse();
     printf("End of syntax analysis\n");
     printf("Table des symboles:\n");
-    print_symboles_table();
+    print_symboles_table(&sym_tab);
+    free_symbol_table(&sym_tab);
     return 0;
 }

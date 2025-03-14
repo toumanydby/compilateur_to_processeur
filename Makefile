@@ -1,7 +1,9 @@
 # Compilateur et options
 CC = gcc
-CFLAGS = -Wall
-DEBUG_CFLAGS = -Wall -g
+CFLAGS = -Wall -I$(SRC_DIR)
+DEBUG_CFLAGS = -Wall -g -I$(SRC_DIR)
+
+# -I$(SRC_DIR) pour rajouter les .h 
 
 # Répertoires
 BIN_DIR = bin
@@ -11,6 +13,7 @@ SRC_DIR = src
 # Fichiers source
 LEX_FILE = $(SRC_DIR)/compilo.l
 YACC_FILE = $(SRC_DIR)/compilo.y
+SYMBOL_TABLE_FILE = $(SRC_DIR)/symboles_table.c
 
 # Cible par défaut
 all: $(BIN_DIR)/compilateur
@@ -45,6 +48,9 @@ $(OBJ_DIR)/lex.yy.o: $(OBJ_DIR)/lex.yy.c | $(OBJ_DIR)
 $(OBJ_DIR)/compilo.tab.o: $(OBJ_DIR)/compilo.tab.c | $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/symboles_table.o: $(SYMBOL_TABLE_FILE) $(SRC_DIR)/symboles_table.h | $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # Compilation des objets (version débogage)
 $(OBJ_DIR)/lex_debug.yy.o: $(OBJ_DIR)/lex_debug.yy.c | $(OBJ_DIR)
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
@@ -52,12 +58,15 @@ $(OBJ_DIR)/lex_debug.yy.o: $(OBJ_DIR)/lex_debug.yy.c | $(OBJ_DIR)
 $(OBJ_DIR)/compilo_debug.tab.o: $(OBJ_DIR)/compilo_debug.tab.c | $(OBJ_DIR)
 	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
 
+$(OBJ_DIR)/symboles_table_debug.o: $(SYMBOL_TABLE_FILE) $(SRC_DIR)/symboles_table.h | $(OBJ_DIR)
+	$(CC) $(DEBUG_CFLAGS) -c $< -o $@
+
 # Compilation de l'exécutable standard
-$(BIN_DIR)/compilateur: $(OBJ_DIR)/lex.yy.o $(OBJ_DIR)/compilo.tab.o | $(BIN_DIR)
+$(BIN_DIR)/compilateur: $(OBJ_DIR)/lex.yy.o $(OBJ_DIR)/compilo.tab.o $(OBJ_DIR)/symboles_table.o | $(BIN_DIR)
 	$(CC) $(CFLAGS) -o $@ $^
 
 # Compilation de l'exécutable avec débogage
-$(BIN_DIR)/compilateur_debug: $(OBJ_DIR)/lex_debug.yy.o $(OBJ_DIR)/compilo_debug.tab.o | $(BIN_DIR)
+$(BIN_DIR)/compilateur_debug: $(OBJ_DIR)/lex_debug.yy.o $(OBJ_DIR)/compilo_debug.tab.o $(OBJ_DIR)/symboles_table_debug.o | $(BIN_DIR)
 	$(CC) $(DEBUG_CFLAGS) -o $@ $^
 
 # Exécution avec un fichier de test (version standard)

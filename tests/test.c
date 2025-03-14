@@ -2,9 +2,9 @@ void test() {
     int a = 10;
     int b = 20;
     int b = a + b + 10;
-    int z = b / 10 - 5 * 2;
     if (b > 0) {
-        printf(b);
+        int a = 3949;
+        printf(a);
     } else {
         printf(0);
     }
