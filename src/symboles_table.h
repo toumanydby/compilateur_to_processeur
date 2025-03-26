@@ -11,8 +11,9 @@
 
 typedef struct {
     char name[BUFFER_SIZE];
-    int value;
+    int address;
     int depth; // profondeur du symbole
+    int is_temp; // 0 for false and 1 for true 
 } Symbol;
 
 typedef struct {
@@ -23,10 +24,10 @@ typedef struct {
 
 void init_symbol_table(SymbolTable *symbols_table);
 void free_symbol_table(SymbolTable *symbols_table);
-void add_symbol(SymbolTable *symbols_table, char *name, int value, int depth);
-int get_symbol_value(SymbolTable *symbols_table, char *name);
-int get_symbol_depth(SymbolTable *symbols_table, char *name);
-void set_symbol_value(SymbolTable *symbols_table, char *name, int value);
+int add_symbol(SymbolTable *symbols_table, const char *name, int depth, int is_temp);
+// int get_symbol_depth(SymbolTable *symbols_table, const char *name);
+int get_symbol_address(SymbolTable *symbols_table, const char *name, int depth);
+void remove_temp_variable(SymbolTable *symbols_table,int depth);
 void remove_symbol_at_depth(SymbolTable *symbols_table, int depth);
 void print_symboles_table(SymbolTable *symbols_table);
 

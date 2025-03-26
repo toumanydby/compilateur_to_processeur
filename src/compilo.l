@@ -39,7 +39,6 @@
 
 [0-9]+          { yylval.number = atoi(yytext); return tNB; }
 [a-zA-Z][a-zA-Z0-9_]*  { strcpy(yylval.name, yytext); return tID; }
-
 [ \t\n]+        ; /* Ignore les espaces, tabulations et retours à la ligne */
 .               { return tERROR; }
 
