@@ -168,10 +168,9 @@ void remove_symbol_at_depth(SymbolTable *symbols_table, int depth){
     }
 }
 
-void remove_temp_variable(SymbolTable *symbols_table, int depth) {
+void remove_temp_variable(SymbolTable *symbols_table) {
     while (symbols_table->nb_symboles > 0 
-        && symbols_table->symbols[symbols_table->nb_symboles - 1].is_temp
-        && symbols_table->symbols[symbols_table->nb_symboles - 1].depth == depth ) {
+        && symbols_table->symbols[symbols_table->nb_symboles - 1].is_temp) {
         symbols_table->nb_symboles--;
     }
 }

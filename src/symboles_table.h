@@ -27,7 +27,7 @@ void free_symbol_table(SymbolTable *symbols_table);
 int add_symbol(SymbolTable *symbols_table, const char *name, int depth, int is_temp);
 // int get_symbol_depth(SymbolTable *symbols_table, const char *name);
 int get_symbol_address(SymbolTable *symbols_table, const char *name, int depth);
-void remove_temp_variable(SymbolTable *symbols_table,int depth);
+void remove_temp_variable(SymbolTable *symbols_table);
 void remove_symbol_at_depth(SymbolTable *symbols_table, int depth);
 void print_symboles_table(SymbolTable *symbols_table);
 

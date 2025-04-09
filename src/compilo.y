@@ -72,7 +72,7 @@ Instructions: Instruction Instructions
            | /* vide */
            ;
 
-Instruction: EXPRESSION tSEM
+Instruction: ExpressionEnd tSEM
           | Affectation tSEM
           | Printf
           | If
@@ -108,13 +108,16 @@ Return: tRETURN EXPRESSION tSEM    { printf("return %d;\n", $2); }
       ;
 
 
+ExpressionEnd : EXPRESSION { remove_temp_variable(&sym_tab);}
+
+
 EXPRESSION: EXPRESSION tADD EXPRESSION    { 
                 char temp_var_name[BUFFER_SIZE];
                 sprintf(temp_var_name, "temp_var_%d",temp_var_count++);
                 int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                 printf("ADD @%d @%d @%d\n", temp_addr, $1, $3);
                 $$ = temp_addr;
-                remove_temp_variable(&sym_tab,current_depth); 
+                //remove_temp_variable(&sym_tab,current_depth); 
             }
           | EXPRESSION tSOU EXPRESSION    {
                 char temp_var_name[BUFFER_SIZE];
@@ -122,7 +125,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                 int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                 printf("SOU @%d @%d @%d\n", temp_addr, $1, $3);
                 $$ = temp_addr;
-                remove_temp_variable(&sym_tab,current_depth); 
+               //remove_temp_variable(&sym_tab,current_depth); 
           }
           | EXPRESSION tMUL EXPRESSION    { 
                 char temp_var_name[BUFFER_SIZE];
@@ -130,7 +133,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                 int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                 printf("MUL @%d @%d @%d\n", temp_addr, $1, $3);
                 $$ = temp_addr;
-                remove_temp_variable(&sym_tab,current_depth); 
+                //remove_temp_variable(&sym_tab,current_depth); 
            }
           | EXPRESSION tDIV EXPRESSION    {  
                 if ($3 != 0) {
@@ -139,7 +142,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     printf("DIV @%d @%d @%d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
-                    remove_temp_variable(&sym_tab,current_depth); 
+                    //remove_temp_variable(&sym_tab,current_depth); 
                 } else {
                     yyerror("Division by zero");
                     $$ = 0;
@@ -152,7 +155,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     printf("EQU @%d @%d @%d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
-                    remove_temp_variable(&sym_tab,current_depth); 
+                    //remove_temp_variable(&sym_tab,current_depth); 
                 }
           | EXPRESSION tNE EXPRESSION    {
                     char temp_var_name[BUFFER_SIZE];
@@ -160,7 +163,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     printf("NEQU @%d @%d @%d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
-                    remove_temp_variable(&sym_tab,current_depth); 
+                    //remove_temp_variable(&sym_tab,current_depth); 
                 }          
           | EXPRESSION tINF EXPRESSION   {
                     char temp_var_name[BUFFER_SIZE];
@@ -168,7 +171,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     printf("INF @%d @%d @%d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
-                    remove_temp_variable(&sym_tab,current_depth); 
+                    // remove_temp_variable(&sym_tab,current_depth); 
           }
           | EXPRESSION tSUP EXPRESSION   { 
                     char temp_var_name[BUFFER_SIZE];
@@ -176,7 +179,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     printf("SUP @%d @%d @%d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
-                    remove_temp_variable(&sym_tab,current_depth); 
+                    // remove_temp_variable(&sym_tab,current_depth); 
            }
           | tOP EXPRESSION tCP           { $$ = $2; }
           | tNB                          {
@@ -185,7 +188,7 @@ EXPRESSION: EXPRESSION tADD EXPRESSION    {
                     int addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     printf("AFC @%d %d\n", addr, $1);
                     $$ = addr;
-                    remove_temp_variable(&sym_tab,current_depth);
+                    // remove_temp_variable(&sym_tab,current_depth);
             }
           | tID { 
                     $$ = get_symbol_address(&sym_tab, $1, current_depth);
