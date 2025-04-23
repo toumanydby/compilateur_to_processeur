@@ -158,7 +158,8 @@ EXPRESSION: ExpressionEnd tADD ExpressionEnd   {
                     char temp_var_name[BUFFER_SIZE];
                     sprintf(temp_var_name, "temp_var_%d",temp_var_count++);
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
-                    fprintf(asm_output, "EQU %d %d %d\n", temp_addr, $1, $3);
+                    fprintf(asm_output, "EQU %d %d %d\n", temp_addr, $1, $3);                    
+                    fprintf(asm_binary_output, "11 %d %d %d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
                 }
           | ExpressionEnd tNE ExpressionEnd    {
@@ -166,6 +167,7 @@ EXPRESSION: ExpressionEnd tADD ExpressionEnd   {
                     sprintf(temp_var_name, "temp_var_%d",temp_var_count++);
                     int temp_addr = add_symbol(&sym_tab, temp_var_name, current_depth, 1);
                     fprintf(asm_output, "NEQU %d %d %d\n", temp_addr, $1, $3);
+                    fprintf(asm_binary_output, "12 %d %d %d\n", temp_addr, $1, $3);
                     $$ = temp_addr;
                 }          
           | ExpressionEnd tINF ExpressionEnd   {
