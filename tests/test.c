@@ -1,10 +1,14 @@
 void test() {
-    int a = 10;
-    int b = 20;
-    int c = a + b + 10;
-    if (b > 15) {
-        int a = 3949;
-        printf(c);
-    } 
+    int i = 0;
+    int j = 0;
+
+    while(i<4) {
+        if (j == i*2) {
+            i = i + 2;
+        } else {
+            i = i + 1;
+        }
+    }
+    printf(i);
 }
 

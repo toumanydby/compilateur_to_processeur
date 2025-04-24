@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define MEM_SIZE 1024
 #define MAX_INSTRUCTIONS 1024
+#define MAX_LABELS 1024
 
 int memory[MEM_SIZE];
 
@@ -16,6 +18,8 @@ typedef struct {
 Instruction instructions[MAX_INSTRUCTIONS];
 int instruction_count = 0;
 
+int labels_table[MAX_LABELS]; // index = label number , value = instruction to go for that label
+
 void load_instructions(const char *filename) {
     FILE *file = fopen(filename, "r");
     if (!file) {
@@ -23,10 +27,22 @@ void load_instructions(const char *filename) {
         exit(EXIT_FAILURE);
     }
 
+    // On lit toutes les lignes une par une 
     char line[128];
-    while (fgets(line, sizeof(line),file)) {
-        Instruction inst = {0};
+    while (fgets(line, sizeof(line), file)) {
+        // Fill the label table 
+        if(strncmp(line, "LABEL", 5) == 0){
+            int label;
+            if(sscanf(line, "LABEL%d:", &label) == 1){
+                labels_table[label] = instruction_count;
+            } else{
+                fprintf(stderr, "Erreur lecture label : %s", line);
+            }
+            continue;
+        }
 
+        // Fill the instructions table 
+        Instruction inst = {0};
         int nb = sscanf(line, "%d %d %d %d", &inst.opcode, &inst.a1, &inst.a2, &inst.a3);
         if(nb >= 2) {
             instructions[instruction_count++] = inst;
@@ -37,14 +53,14 @@ void load_instructions(const char *filename) {
 
     fclose(file);
 
-    // for (size_t i = 0; i < 20; i++)
-    // {
-    //     printf("Instruction %ld : %d %d %d %d\n",i,instructions[i].opcode,instructions[i].a1,instructions[i].a2,instructions[i].a3);
-    // }
+    for (size_t i = 0; i < instruction_count; i++)
+    {
+        printf("Instruction %ld : %d %d %d %d\n",i,instructions[i].opcode,instructions[i].a1,instructions[i].a2,instructions[i].a3);
+    }
 }
 
 void execute() {
-    int pc = 0;
+    int pc = 0; // program counter 
     while (pc < instruction_count) {
         Instruction inst = instructions[pc];
 
@@ -72,11 +88,13 @@ void execute() {
                 memory[inst.a1] = inst.a2;
                 break;
             case 7: // JMP
-                pc = inst.a1 - 1; // -1 because pc++ after switch
-                break;
+                pc = labels_table[inst.a1]; 
+                continue;
             case 8: // JMF
-                if (memory[inst.a1] == 0)
-                    pc = inst.a2 - 1;
+                if (memory[inst.a1] == 0){
+                    pc = labels_table[inst.a2]; 
+                    continue;                    
+                }
                 break;
             case 9: // INF
                 memory[inst.a1] = (memory[inst.a2] < memory[inst.a3]) ? 1 : 0;
@@ -100,7 +118,7 @@ void execute() {
         pc++;
     }
 
-    // for (size_t i = 0; i < 20; i++)
+    // for (size_t i = 0; i < instruction_count; i++)
     // {
     //     printf("Memory pos %ld have value : %d\n", i, memory[i]);
     // }
@@ -111,6 +129,9 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "Usage : %s <fichier_code.asm>\n", argv[0]);
         return EXIT_FAILURE;
     }
+
+    for (int i = 0; i < MAX_LABELS; i++) labels_table[i] = -1;
+
 
     load_instructions(argv[1]);
     execute();
