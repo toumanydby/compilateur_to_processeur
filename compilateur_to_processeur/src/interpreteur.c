@@ -111,6 +111,12 @@ void execute() {
             case 13: // PRI
                 printf("%d\n", memory[inst.a1]);
                 break;
+            case 14: // LOAD 
+                inst.a1 = memory[inst.a2];
+                break;
+            case 15: // STORE
+                memory[inst.a1] = inst.a2;
+                break;
             default:
                 fprintf(stderr, "Erreur : opcode inconnu %d à la ligne %d\n", inst.opcode, pc);
                 exit(EXIT_FAILURE);
