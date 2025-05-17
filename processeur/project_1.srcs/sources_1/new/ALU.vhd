@@ -44,8 +44,7 @@ end ALU;
 
 architecture Behavioral of ALU is
 
-    signal temp: STD_LOGIC_VECTOR(15 downto 0);
-    signal result : unsigned(8 downto 0); -- resultat sur 9bits pour ADD/SOU avec carry 
+    signal temp: STD_LOGIC_VECTOR(15 downto 0) := (others => '0');
     signal a_unsigned, b_unsigned : unsigned(7 downto 0);
 begin
 
@@ -56,45 +55,30 @@ begin
     begin
         case Ctrl_Alu is
            when "000" =>  -- ADD
-                result <= ('0' & a_unsigned) + ('0' & b_unsigned);
-                temp <= (others => '0');
-                temp(8 downto 0) <= std_logic_vector(result);
-                C <= result(8);
-                if result > 255 then 
-                    O <= '1'; 
-                else 
-                    O <= '0'; 
-                end if;
+                temp(8 downto 0) <= std_logic_vector(('0' & a_unsigned) + ('0' & b_unsigned));
+
 
             when "001" => -- SOU
-                result <= ('0' & a_unsigned) - ('0' & b_unsigned);
-                temp <= (others => '0');
-                temp(8 downto 0) <= std_logic_vector(result);
-                C <= '0'; -- Optional: Borrow not handled
-                if result > 255 then
-                    O <= '1';
-                else
-                    O <= '0';
-                end if; 
-                
+                temp(8 downto 0) <= std_logic_vector(('0' & a_unsigned) - ('0' & b_unsigned));
+            
             when "010" =>  -- MUL
                 temp <= std_logic_vector(a_unsigned * b_unsigned);
-                C <= '0'; -- No carry for MUL
-                if unsigned(temp) > 255 then
-                    O <= '1';
-                else
-                    O <= '0';
-                end if;
                 
+            when "011" => -- DIV
+                if b_unsigned = 0 then
+                else
+                    -- On convertit le type de a et b en integer, la division ensuite convertie en unsigned avec le bon nombre de bits
+                    -- puis on fait un conversion en std_logic_vector
+                    temp <= std_logic_vector(to_unsigned((to_integer(a_unsigned) / to_integer(b_unsigned)), 16));
+                end if;
+                    
             when others =>
                 temp <= (others => '0');
-                C <= '0';
-                O <= '0';
-                
         end case;
     end process;
 
-        
+    C <= '1' when (Ctrl_Alu = "000" or Ctrl_Alu = "001") and temp(8) = '1' else '0'; 
+    O <= '1' when (Ctrl_Alu = "010") and unsigned(temp) > 255 else '0'; 
     S <= temp(7 downto 0);
     Z <= '1' when temp(7 downto 0) = "00000000" else '0';
     N <= temp(7); -- MSB = bit de signe

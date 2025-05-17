@@ -1,0 +1,4 @@
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/doumbouya/Documents/4IR/S8/projetSI/processeur/project_1.srcs/sources_1/new/ALU.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'ALU'
+INFO: [VRFC 10-163] Analyzing VHDL file "/home/doumbouya/Documents/4IR/S8/projetSI/processeur/project_1.srcs/sim_1/new/alu_test.vhd" into library xil_defaultlib
+INFO: [VRFC 10-3107] analyzing entity 'alu_test'
