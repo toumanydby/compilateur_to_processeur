@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 05/05/2025 09:50:40 AM
+-- Create Date: 04/29/2025 09:50:40 AM
 -- Design Name: 
 -- Module Name: register_bench - Behavioral
 -- Project Name: 
@@ -44,29 +44,37 @@ entity register_bench is
 end register_bench;
 
 architecture Behavioral of register_bench is
-    
-    -- DEFINIR LES DIFFERENTS SIGNAUX ET AUTRES ET ASSIGNATION SI IL FAUT 
     type register_array is array(0 to 15) of STD_LOGIC_VECTOR(7 downto 0);
-    signal regs: register_array := ( others => (others => '0'));
+    signal regs: register_array := (others => (others => '0'));
 begin
 
-    
-    -- lecture
-    process(regs)
-    begin    
-        if W = '0' then 
-            QA <= regs[addr_A];
-            QB <= regs[addr_B];
+    -- Processus synchrone pour reset et écriture
+    process(CLK)
+    begin
+        wait until clk'event and clk = '1';
+        if RST = '1' then
+            regs <= (others => (others => '0'));
+        elsif W = '1' then
+            regs(to_integer(unsigned(addr_W))) <= DATA;
         end if;
     end process;
-    
-    -- ecriture
-    process(regs)
+
+    -- Processus asynchrone pour la lecture avec Bypass D -> Q 
+    process(regs, addr_A, addr_B, W, addr_W, DATA)
     begin
-        if W = '1' then
-            regs[addr_W] <= DATA;
-    end process;   
-    
-    RST <= '0';
+        -- Lecture port A 
+        if (W = '1' and addr_A = addr_W) then
+            QA <= DATA;
+        else
+            QA <= regs(to_integer(unsigned(addr_A)));
+        end if;
+
+        -- Lecture port B
+        if (W = '1' and addr_B = addr_W) then
+            QB <= DATA;
+        else
+            QB <= regs(to_integer(unsigned(addr_B)));
+        end if;
+    end process;
 
 end Behavioral;

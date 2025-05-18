@@ -2,7 +2,7 @@
 -- Company: 
 -- Engineer: 
 -- 
--- Create Date: 04/30/2025 10:18:25 AM
+-- Create Date: 04/09/2025 9:18:25 AM
 -- Design Name: 
 -- Module Name: ALU - Behavioral
 -- Project Name: 
@@ -66,6 +66,7 @@ begin
                 
             when "011" => -- DIV
                 if b_unsigned = 0 then
+                    temp <= (others => '0'); -- division par zéro : résultat nul
                 else
                     -- On convertit le type de a et b en integer, la division ensuite convertie en unsigned avec le bon nombre de bits
                     -- puis on fait un conversion en std_logic_vector
