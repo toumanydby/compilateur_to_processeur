@@ -47,9 +47,9 @@ architecture Behavioral of data_memory is
     signal memory : ram_type := (others => (others => '0'));
     signal out_reg : STD_LOGIC_VECTOR(7 downto 0) := (others => '0');
 begin
-    process(CLK)
+    process
     begin
-        wait until clk'event and clk = '1';
+        wait until CLK'event and CLK = '1';
         if RST = '1' then
             memory <= (others => (others => '0'));
             out_reg <= (others => '0');
