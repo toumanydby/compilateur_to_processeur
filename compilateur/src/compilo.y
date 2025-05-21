@@ -114,22 +114,6 @@ IfContext: EXPRESSION
     }
 ;
 
-WhileStart:
-    {
-        int label_start = get_new_label();
-        fprintf(asm_binary_output, "LABEL%d:\n", label_start);
-        $$ = label_start;
-    }
-;
-
-WhileContext: WhileStart tOP EXPRESSION tCP
-    {
-        int label_end = get_new_label();
-        fprintf(asm_binary_output, "8 %d %d 0\n", $3, label_end);
-        $$ = ($1 << 16) | label_end;
-    }
-;
-
 If: tIF tOP IfContext tCP Body
     {
         int label_else = $3 >> 16;
@@ -146,6 +130,23 @@ If: tIF tOP IfContext tCP Body
     {
         int label_else = $3 >> 16;
         fprintf(asm_binary_output, "LABEL%d:\n", label_else);
+    }
+;
+
+
+WhileStart:
+    {
+        int label_start = get_new_label();
+        fprintf(asm_binary_output, "LABEL%d:\n", label_start);
+        $$ = label_start;
+    }
+;
+
+WhileContext: WhileStart tOP EXPRESSION tCP
+    {
+        int label_end = get_new_label();
+        fprintf(asm_binary_output, "8 %d %d 0\n", $3, label_end);
+        $$ = ($1 << 16) | label_end;
     }
 ;
 
